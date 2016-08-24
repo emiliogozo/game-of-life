@@ -1,0 +1,88 @@
+$gray20: #333333;
+$gray14: #242424;
+$red500: #f44336;
+
+@mixin cell-container($numCol: 70, $numRow: 50, $padding: 10px, $cell-size: 12px) {
+    width: $cell-size * $numCol + $padding * 2;
+    height: $cell-size * $numRow + $padding * 2;
+    padding: $padding;
+
+    .cell {
+        width: $cell-size;
+        height: $cell-size;
+    }
+}
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    background-image: radial-gradient($red500, black);
+    font-family: monospace;
+    font-size: 20px;
+    color: white;
+}
+
+.cell-container{
+    background-color: $gray20;
+    border-radius: 6px;
+    margin: 0 auto;
+}
+
+.cell-container-70x50 {
+    @include cell-container;
+}
+
+.cell-container-50x30 {
+    @include cell-container(50, 30);
+}
+
+.cell-container-100x80 {
+    @include cell-container(100, 80, $cell-size: 10px);
+}
+
+.cell {
+    background-color: black;
+    border-top: 1px solid $gray20;
+	border-left: 1px solid $gray14;
+    float: left;
+}
+
+.control-top {
+    background: $gray20;
+	width: 580px;
+	height: 40px;
+	margin: 40px auto 0;
+	padding-top: 5px;
+    border-radius: 15px 15px 0 0;
+}
+
+.control-bottom {
+    background: $gray20;
+	width: 500px;
+	height: 85px;
+	margin: 0 auto 0;
+	padding-bottom: 5px;
+    border-radius: 0 0 15px 15px;
+
+    .control-label {
+        display: inline-block;
+        width: 132px;
+        margin: 8px;
+    }
+}
+
+.btn {
+    width: 100px;
+    height: 30px;
+    margin: 4px 8px;
+    background-color: $gray14;
+    color: white;
+	font-size: 20px;
+	border-radius: 4px;
+}
+
+.counter-label {
+    margin-left: 10px;
+}
