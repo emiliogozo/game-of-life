@@ -54,10 +54,10 @@ class Board extends React.Component {
   _generateCells() {
     var cells = [];
     for (let i = 0; i < this.state.numCol; i++) {
-      let cellName = i < 0 ? '0' + i : '' + i;
       for (let j = 0; j < this.state.numRow; j++) {
-        cellName += j < 0 ? '0' + j : '' + j;
-        cells.push(<Cell id={cellName} key={cellName} />);
+        let cellName = i < 10 ? '0' + i : '' + i;
+        cellName += j < 10 ? '0' + j : '' + j;
+        cells.push(<Cell name={cellName} key={cellName} />);
       }
     }
     return cells;
@@ -72,11 +72,32 @@ class Board extends React.Component {
 }
 
 class Cell extends React.Component {
+  constructor() {
+    super();
+    this.state = {
+      alive: false,
+      newBorn: true,
+      className: 'cell'
+    };
+  }
   render() {
     return (
-      <div className='cell'>
+      <div id={this.props.name} className={this.state.className} onClick={(ev) => this._onClick(ev)}>
       </div>
     );
+  }
+  _onClick(ev) {
+    var className = ev.target.className;
+    if(/\ new\-born/.test(className)) {
+      className = className.replace(/\ new\-born/,'');
+    } else {
+      className += ' new-born';
+    }
+    this.setState({
+      alive: !this.state.alive,
+      newBorn: true,
+      className: className
+    });
   }
 }
 
