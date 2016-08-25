@@ -53,8 +53,12 @@ class Board extends React.Component {
   }
   _generateCells() {
     var cells = [];
-    for (let i = 0; i < (this.state.numCol * this.state.numRow); i++) {
-      cells.push(<Cell key={i} />);
+    for (let i = 0; i < this.state.numCol; i++) {
+      let cellName = i < 0 ? '0' + i : '' + i;
+      for (let j = 0; j < this.state.numRow; j++) {
+        cellName += j < 0 ? '0' + j : '' + j;
+        cells.push(<Cell id={cellName} key={cellName} />);
+      }
     }
     return cells;
   }
