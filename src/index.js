@@ -19,9 +19,13 @@ class Board extends React.Component {
     this.state = {
       numCol: 70,
       numRow: 50,
-      speed: 1000,
-      generation: 0
+      speed: 10000,
+      generation: 0,
+      cellIsAlive: []
     };
+  }
+  componentDidMount() {
+    this._initCellStatus();
   }
   render() {
     return (
@@ -33,7 +37,7 @@ class Board extends React.Component {
           <span className='counter-label'>Generation: </span><span className='counter'>{this.state.generation}</span>
         </div>
         <div className={'cell-container cell-container-' + this.state.numCol + 'x' + this.state.numRow}>
-          {this._generateCells() }
+          { this._generateCells() }
         </div>
         <div className='control-bottom'>
           <div className='control-size'>
@@ -52,42 +56,84 @@ class Board extends React.Component {
       </div>
     );
   }
+  _initCellStatus() {
+    var cellStats = [];
+    var cols = this.state.numCol;
+    var rows = this.state.numRow;
+    var row = [];
+    while (cols--) row.push(false);
+    while (rows--) cellStats.push(row.slice());
+    this.setState({
+      generation: 0,
+      cellIsAlive: cellStats
+    });
+  }
+  _updateCellStatus() {
+    var cellStats = this.state.cellIsAlive;
+    var cols = this.state.numCol;
+    var rows = this.state.numRow;
+    var newCellStats = JSON.parse(JSON.stringify(cellStats));
+    for (var i = 0; i < rows; i++) {
+      for (var j = 0; j < cols; j++) {
+        var nb = [
+          [i + 1, j - 1], [i + 1, j], [i + 1, j + 1], [i, j + 1],
+          [i - 1, j + 1], [i - 1, j], [i - 1, j - 1], [i, j - 1]
+        ];
+        nb = nb.filter(idx =>
+          ((idx[0] >= 0) && (idx[0] < rows) && (idx[1] >= 0) && (idx[1] < cols)));
+        var count = nb.map(idx => cellStats[idx[0]][idx[1]] ? 1 : 0)
+          .reduce((a, b) => a + b, 0);
+        if (count === 3) {
+          newCellStats[i][j] = true;
+        } else if ((count < 2) || (count > 3)) {
+          newCellStats[i][j] = false;
+        }
+      }
+    }
+    this.setState({
+      generation: this.state.generation + 1,
+      cellIsAlive: newCellStats
+    });
+  }
   _generateCells() {
     var cells = [];
-    for (let i = 0; i < this.state.numCol; i++) {
-      for (let j = 0; j < this.state.numRow; j++) {
+    for (var i = 0; i < this.state.numRow; i++) {
+      for (var j = 0; j < this.state.numCol; j++) {
         let cellName = i < 10 ? '0' + i : '' + i;
         cellName += j < 10 ? '0' + j : '' + j;
-        cells.push(<Cell name={cellName} key={cellName} />);
+        cells.push(
+          <Cell name={cellName}
+            rowIndex={i} colIndex={j}
+            generation={this.state.generation}
+            onStateChange={obj => this._onCellStateChange(obj) }
+            isAlive={this.state.cellIsAlive[i] && this.state.cellIsAlive[i][j]}
+            key={cellName} />
+        );
       }
     }
     return cells;
   }
   /**
    * Start the animation by running a setInterval instance
-   */ 
+   */
   _startAnimation() {
     this.interval = setInterval(() => {
-        this.setState({
-          generation: this.state.generation + 1
-        });
+      this._updateCellStatus();
     }, this.speed);
   }
   /**
    * Halts the animation by stopping the counter
-   */ 
+   */
   _pauseAnimation() {
     clearInterval(this.interval);
   }
   /**
    * Clears the board and resets the counter to zero
    * TODO: clearing the board
-   */ 
+   */
   _clearBoard() {
     this._pauseAnimation();
-    this.setState({
-      generation: 0
-    });
+    this._initCellStatus();
   }
   _changeSize(ev) {
     const [numCol, numRow] = ev.target.value.split('x').map(val => parseInt(val));
@@ -96,35 +142,68 @@ class Board extends React.Component {
       numRow: numRow
     });
   }
+  _onCellStateChange(obj) {
+    this.state.cellIsAlive[obj.rowIndex][obj.colIndex] = obj.isAlive;
+  }
 }
 
 class Cell extends React.Component {
   constructor() {
     super();
     this.state = {
-      alive: false,
-      newBorn: true,
       className: 'cell'
     };
   }
+  componentWillReceiveProps(newProps) {
+    if (newProps.isAlive) {
+      if (!this._isAlive(this.state.className)) {
+        this.setState({
+          className: 'cell new-born'
+        });
+      } else if (this._isNewBorn(this.state.className)) {
+        this.setState({
+          className: 'cell alive'
+        });
+      }
+    } else {
+      this.setState({
+        className: 'cell'
+      });
+    }
+  }
   render() {
     return (
-      <div id={this.props.name} className={this.state.className} onClick={(ev) => this._onClick(ev) }>
+      <div
+        id={this.props.name}
+        className={this.state.className}
+        onClick={(ev) => this._onClick(ev) }>
       </div>
     );
   }
   _onClick(ev) {
     var className = ev.target.className;
-    if (/\ new\-born/.test(className)) {
-      className = className.replace(/\ new\-born/, '');
-    } else {
+    var isAlive = this._isAlive(className);
+    if (!isAlive) {
       className += ' new-born';
+    } else {
+      className = 'cell';
     }
     this.setState({
-      alive: !this.state.alive,
+      alive: !isAlive,
       newBorn: true,
       className: className
     });
+    this.props.onStateChange({
+      rowIndex: this.props.rowIndex,
+      colIndex: this.props.colIndex,
+      isAlive: !isAlive
+    });
+  }
+  _isAlive(className) {
+    return /alive/.test(className) || /new\-born/.test(className);
+  }
+  _isNewBorn(className) {
+    return /new\-born/.test(className);
   }
 }
 
