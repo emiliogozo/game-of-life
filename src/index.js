@@ -37,9 +37,9 @@ class Board extends React.Component {
         <div className='control-bottom'>
           <div className='control-size'>
             <span className='control-label'>Board Size: </span>
-            <button id='size-50x30-btn' className='btn' onClick={() => this._changeSize(50,30)}>50x30</button>
-            <button id='size-70x50-btn' className='btn' onClick={() => this._changeSize(70,50)}>70x50</button>
-            <button id='size-100x80-btn' className='btn' onClick={() => this._changeSize(100,80)}>100x80</button>
+            <button id='size-50x30-btn' className='btn' onClick={(ev) => this._changeSize(ev)} value='50x30'>50x30</button>
+            <button id='size-70x50-btn' className='btn' onClick={(ev) => this._changeSize(ev)} value='70x50'>70x50</button>
+            <button id='size-100x80-btn' className='btn' onClick={(ev) => this._changeSize(ev)} value='100x80'>100x80</button>
           </div>
           <div className='control-speed'>
             <span className='control-label'>Sim Speed: </span>
@@ -58,7 +58,8 @@ class Board extends React.Component {
     }
     return cells;
   }
-  _changeSize(numCol, numRow) {
+  _changeSize(ev) {
+    const [numCol, numRow] = ev.target.value.split('x').map(val => parseInt(val));
     this.setState({
       numCol: numCol,
       numRow: numRow
