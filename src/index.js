@@ -1,6 +1,13 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 
+import omit from 'lodash/omit';
+import reject from 'lodash/reject';
+import filter from 'lodash/filter';
+import flatten from 'lodash/flatten';
+import uniqWith from 'lodash/uniqWith';
+import isEqual from 'lodash/isEqual';
+
 import Style from './main.scss';
 
 class Main extends React.Component {
@@ -21,7 +28,7 @@ class Board extends React.Component {
       numRow: 50,
       speed: 10000,
       generation: 0,
-      cellIsAlive: []
+      aliveArr: []
     };
   }
   componentDidMount() {
@@ -68,31 +75,43 @@ class Board extends React.Component {
       cellIsAlive: cellStats
     });
   }
+  _getNeighbors(cell) {
+    const {i, j} = cell;
+    const cols = this.state.numCol;
+    const rows = this.state.numRow;
+    var nbArr = [
+      { i: i + 1, j: j - 1 }, { i: i + 1, j: j }, { i: i + 1, j: j + 1 }, { i: i, j: j + 1 },
+      { i: i - 1, j: j + 1 }, { i: i - 1, j: j }, { i: i - 1, j: j - 1 }, { i: i, j: j - 1 }
+    ];
+    return nbArr.filter(nb =>
+      ((nb.i >= 0) && (nb.i < rows) && (nb.j >= 0) && (nb.j < cols)));
+  }
+  _isAlive(cell) {
+    return filter(this.state.aliveArr, cell).length === 1;
+  }
   _updateCellStatus() {
-    var cellStats = this.state.cellIsAlive;
-    var cols = this.state.numCol;
-    var rows = this.state.numRow;
-    var newCellStats = JSON.parse(JSON.stringify(cellStats));
-    for (var i = 0; i < rows; i++) {
-      for (var j = 0; j < cols; j++) {
-        var nb = [
-          [i + 1, j - 1], [i + 1, j], [i + 1, j + 1], [i, j + 1],
-          [i - 1, j + 1], [i - 1, j], [i - 1, j - 1], [i, j - 1]
-        ];
-        nb = nb.filter(idx =>
-          ((idx[0] >= 0) && (idx[0] < rows) && (idx[1] >= 0) && (idx[1] < cols)));
-        var count = nb.map(idx => cellStats[idx[0]][idx[1]] ? 1 : 0)
-          .reduce((a, b) => a + b, 0);
-        if (count === 3) {
-          newCellStats[i][j] = true;
-        } else if ((count < 2) || (count > 3)) {
-          newCellStats[i][j] = false;
-        }
+    var aliveArr = this.state.aliveArr;
+    var newAliveArr = [];
+    newAliveArr = uniqWith(flatten(aliveArr.map(alive =>
+      [alive].concat(this._getNeighbors(alive))
+    )), isEqual).map(cell => {
+      var nbArr = this._getNeighbors(cell);
+      var count = nbArr
+        .map(nb => this._isAlive(nb) ? 1 : 0)
+        .reduce((a, b) => a + b, 0);
+      var newAliveSubArr = [];
+      if (count === 3) {
+        newAliveSubArr.push(cell);
+      } else if (count === 2 && this._isAlive(cell)) {
+        newAliveSubArr.push(cell);
       }
-    }
+      return newAliveSubArr;
+    });
+    newAliveArr = flatten(newAliveArr);
+
     this.setState({
       generation: this.state.generation + 1,
-      cellIsAlive: newCellStats
+      aliveArr: newAliveArr
     });
   }
   _generateCells() {
@@ -105,8 +124,8 @@ class Board extends React.Component {
           <Cell name={cellName}
             rowIndex={i} colIndex={j}
             generation={this.state.generation}
-            onStateChange={obj => this._onCellStateChange(obj) }
-            isAlive={this.state.cellIsAlive[i] && this.state.cellIsAlive[i][j]}
+            onStateChange={ obj => this._onCellStateChange(obj) }
+            isAlive={this._isAlive({i: i, j: j})}
             key={cellName} />
         );
       }
@@ -143,7 +162,11 @@ class Board extends React.Component {
     });
   }
   _onCellStateChange(obj) {
-    this.state.cellIsAlive[obj.rowIndex][obj.colIndex] = obj.isAlive;
+    if (obj.isAlive) {
+      this.state.aliveArr.push(omit(obj, 'isAlive'));
+    } else {
+      this.state.aliveArr = reject(this.state.aliveArr, omit(obj, 'isAlive'));
+    }
   }
 }
 
@@ -194,8 +217,8 @@ class Cell extends React.Component {
       className: className
     });
     this.props.onStateChange({
-      rowIndex: this.props.rowIndex,
-      colIndex: this.props.colIndex,
+      i: this.props.rowIndex,
+      j: this.props.colIndex,
       isAlive: !isAlive
     });
   }
