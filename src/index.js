@@ -1,13 +1,6 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 
-import omit from 'lodash/omit';
-import reject from 'lodash/reject';
-import filter from 'lodash/filter';
-import flatten from 'lodash/flatten';
-import uniqWith from 'lodash/uniqWith';
-import isEqual from 'lodash/isEqual';
-
 import Style from './main.scss';
 
 class Main extends React.Component {
@@ -75,26 +68,15 @@ class Board extends React.Component {
       cellIsAlive: cellStats
     });
   }
-  _getNeighbors(cell) {
-    const {i, j} = cell;
-    const cols = this.state.numCol;
-    const rows = this.state.numRow;
-    var nbArr = [
-      { i: i + 1, j: j - 1 }, { i: i + 1, j: j }, { i: i + 1, j: j + 1 }, { i: i, j: j + 1 },
-      { i: i - 1, j: j + 1 }, { i: i - 1, j: j }, { i: i - 1, j: j - 1 }, { i: i, j: j - 1 }
-    ];
-    return nbArr.filter(nb =>
-      ((nb.i >= 0) && (nb.i < rows) && (nb.j >= 0) && (nb.j < cols)));
-  }
-  _isAlive(cell) {
-    return filter(this.state.aliveArr, cell).length === 1;
-  }
   _updateCellStatus() {
     var aliveArr = this.state.aliveArr;
     var newAliveArr = [];
-    newAliveArr = uniqWith(flatten(aliveArr.map(alive =>
+    newAliveArr = aliveArr.map(alive =>
       [alive].concat(this._getNeighbors(alive))
-    )), isEqual).map(cell => {
+    );
+    newAliveArr = [].concat.apply([], newAliveArr);
+    newAliveArr = [...new Set(newAliveArr)];
+    newAliveArr = newAliveArr.map(cell => {
       var nbArr = this._getNeighbors(cell);
       var count = nbArr
         .map(nb => this._isAlive(nb) ? 1 : 0)
@@ -107,7 +89,7 @@ class Board extends React.Component {
       }
       return newAliveSubArr;
     });
-    newAliveArr = flatten(newAliveArr);
+    newAliveArr = [].concat.apply([], newAliveArr);
 
     this.setState({
       generation: this.state.generation + 1,
@@ -117,13 +99,10 @@ class Board extends React.Component {
   _generateCells() {
     return [...new Array(this.state.numRow * this.state.numCol)]
       .map((val, n) => {
-        var i = n % this.state.numCol;
-        var j = Math.ceil(n / this.state.numCol);
         return <Cell
-          rowIndex={i} colIndex={j}
-          onStateChange={ obj => this._onCellStateChange(obj) }
-          isAlive={ this._isAlive({ i: i, j: j }) }
-          key={n} />;
+          id={n} key={n}
+          onClick={ ev => this._onCellClick(ev) }
+          isAlive={ this._isAlive(n.toString()) } />;
       });
   }
   /**
@@ -155,12 +134,39 @@ class Board extends React.Component {
       numRow: numRow
     });
   }
-  _onCellStateChange(obj) {
-    if (obj.isAlive) {
-      this.state.aliveArr.push(omit(obj, 'isAlive'));
+  _onCellClick(ev) {
+    if (!this._isAlive(ev.target.id)) {
+      this.state.aliveArr.push(ev.target.id);
     } else {
-      this.state.aliveArr = reject(this.state.aliveArr, omit(obj, 'isAlive'));
+      this.state.aliveArr = this.state.aliveArr.filter(id => id !== ev.target.id);
     }
+  }
+  _isAlive(id) {
+    return this.state.aliveArr.indexOf(id) !== -1;
+  }
+  _getNeighbors(id) {
+    const {i, j} = this._getCellIndex(id);
+    const cols = this.state.numCol;
+    const rows = this.state.numRow;
+    var nbArr = [
+      { i: i + 1, j: j - 1 }, { i: i + 1, j: j }, { i: i + 1, j: j + 1 }, { i: i, j: j + 1 },
+      { i: i - 1, j: j + 1 }, { i: i - 1, j: j }, { i: i - 1, j: j - 1 }, { i: i, j: j - 1 }
+    ];
+    return nbArr.filter(nb =>
+      ((nb.i >= 0) && (nb.i < rows) && (nb.j >= 0) && (nb.j < cols)))
+      .map((cell) => this._cellIndexToId(cell));
+  }
+  _getCellIndex(id) {
+    var n = parseInt(id);
+    var i = n % this.state.numCol;
+    var j = Math.floor(n / this.state.numCol);
+    return ({
+      i: i,
+      j: j
+    });
+  }
+  _cellIndexToId(cell) {
+    return (cell.j * this.state.numCol + cell.i).toString();
   }
 }
 
@@ -194,6 +200,7 @@ class Cell extends React.Component {
   render() {
     return (
       <div
+        id={this.props.id}
         className={this.state.className}
         onClick={(ev) => this._onClick(ev) }>
       </div>
@@ -210,11 +217,7 @@ class Cell extends React.Component {
     this.setState({
       className: className
     });
-    this.props.onStateChange({
-      i: this.props.rowIndex,
-      j: this.props.colIndex,
-      isAlive: !isAlive
-    });
+    this.props.onClick(ev);
   }
   _isAlive(className) {
     return /alive/.test(className) || /new\-born/.test(className);
