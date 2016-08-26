@@ -26,13 +26,13 @@ class Board extends React.Component {
     this.state = {
       numCol: 70,
       numRow: 50,
-      speed: 10000,
+      delay: 100,
       generation: 0,
       aliveArr: []
     };
   }
   componentDidMount() {
-    this._initCellStatus();
+    //this._initCellStatus();
   }
   render() {
     return (
@@ -115,22 +115,16 @@ class Board extends React.Component {
     });
   }
   _generateCells() {
-    var cells = [];
-    for (var i = 0; i < this.state.numRow; i++) {
-      for (var j = 0; j < this.state.numCol; j++) {
-        let cellName = i < 10 ? '0' + i : '' + i;
-        cellName += j < 10 ? '0' + j : '' + j;
-        cells.push(
-          <Cell name={cellName}
-            rowIndex={i} colIndex={j}
-            generation={this.state.generation}
-            onStateChange={ obj => this._onCellStateChange(obj) }
-            isAlive={this._isAlive({i: i, j: j})}
-            key={cellName} />
-        );
-      }
-    }
-    return cells;
+    return [...new Array(this.state.numRow * this.state.numCol)]
+      .map((val, n) => {
+        var i = n % this.state.numCol;
+        var j = Math.ceil(n / this.state.numCol);
+        return <Cell
+          rowIndex={i} colIndex={j}
+          onStateChange={ obj => this._onCellStateChange(obj) }
+          isAlive={ this._isAlive({ i: i, j: j }) }
+          key={n} />;
+      });
   }
   /**
    * Start the animation by running a setInterval instance
@@ -138,7 +132,7 @@ class Board extends React.Component {
   _startAnimation() {
     this.interval = setInterval(() => {
       this._updateCellStatus();
-    }, this.speed);
+    }, this.delay);
   }
   /**
    * Halts the animation by stopping the counter
@@ -177,8 +171,8 @@ class Cell extends React.Component {
       className: 'cell'
     };
   }
-  componentWillReceiveProps(newProps) {
-    if (newProps.isAlive) {
+  componentWillReceiveProps(nextProps) {
+    if (nextProps.isAlive) {
       if (!this._isAlive(this.state.className)) {
         this.setState({
           className: 'cell new-born'
@@ -194,10 +188,12 @@ class Cell extends React.Component {
       });
     }
   }
+  shouldComponentUpdate(nextProps, nextState) {
+    return this.state.className != nextState.className;
+  }
   render() {
     return (
       <div
-        id={this.props.name}
         className={this.state.className}
         onClick={(ev) => this._onClick(ev) }>
       </div>
@@ -212,8 +208,6 @@ class Cell extends React.Component {
       className = 'cell';
     }
     this.setState({
-      alive: !isAlive,
-      newBorn: true,
       className: className
     });
     this.props.onStateChange({
