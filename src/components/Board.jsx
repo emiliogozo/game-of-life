@@ -5,6 +5,8 @@ import BoardAnimationControl from './BoardAnimationControl';
 import BoardSizeControl from './BoardSizeControl';
 import BoardSpeedControl from './BoardSpeedControl';
 
+import ArrayHelper from '../utils/ArrayHelper';
+
 class Board extends React.Component {
   constructor() {
     super();
@@ -31,9 +33,15 @@ class Board extends React.Component {
       { i: i + 1, j: j - 1 }, { i: i + 1, j }, { i: i + 1, j: j + 1 }, { i, j: j + 1 },
       { i: i - 1, j: j + 1 }, { i: i - 1, j }, { i: i - 1, j: j - 1 }, { i, j: j - 1 }
     ];
-    return nbArr.filter(nb =>
-      ((nb.i >= 0) && (nb.i < rows) && (nb.j >= 0) && (nb.j < cols)))
-      .map((cell) => this.cellIndexToId(cell));
+    return nbArr.map(nb => {
+      let ii = nb.i;
+      let jj = nb.j;
+      if (ii < 0) ii += cols;
+      if (ii >= cols) ii -= cols;
+      if (jj < 0) jj += rows;
+      if (jj >= rows) jj -= rows;
+      return this.cellIndexToId({ i: ii, j: jj });
+    });
   }
   getCellIndex(id) {
     const n = parseInt(id, 10);
@@ -58,8 +66,8 @@ class Board extends React.Component {
     newAliveArr = aliveArr.map(alive =>
       [alive].concat(this.getNeighbors(alive))
     );
-    newAliveArr = [].concat(...newAliveArr);
-    newAliveArr = [...new Set(newAliveArr)];
+    newAliveArr = ArrayHelper.flatten(newAliveArr);
+    newAliveArr = ArrayHelper.unique(newAliveArr);
     newAliveArr = newAliveArr.map(cell => {
       const nbArr = this.getNeighbors(cell);
       const count = nbArr
@@ -73,7 +81,7 @@ class Board extends React.Component {
       }
       return newAliveSubArr;
     });
-    newAliveArr = [].concat(...newAliveArr);
+    newAliveArr = ArrayHelper.flatten(newAliveArr);
 
     this.setState({
       aliveArr: newAliveArr
