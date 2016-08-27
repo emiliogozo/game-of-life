@@ -11,9 +11,10 @@ class Board extends React.Component {
   constructor() {
     super();
     this.state = {
-      numCol: 70,
-      numRow: 50,
-      delay: 100,
+      sizes: ['50x30', '70x50', '100x80'],
+      activeSizeButton: 1,
+      delays: [1000, 500, 50],
+      activeDelayButton: 2,
       aliveArr: [],
       stopSim: false
     };
@@ -32,8 +33,7 @@ class Board extends React.Component {
   }
   getNeighbors(id) {
     const { i, j } = this.getCellIndex(id);
-    const cols = this.state.numCol;
-    const rows = this.state.numRow;
+    const [cols, rows] = this.getDimension();
     const nbArr = [
       { i: i + 1, j: j - 1 }, { i: i + 1, j }, { i: i + 1, j: j + 1 }, { i, j: j + 1 },
       { i: i - 1, j: j + 1 }, { i: i - 1, j }, { i: i - 1, j: j - 1 }, { i, j: j - 1 }
@@ -49,21 +49,30 @@ class Board extends React.Component {
     });
   }
   getCellIndex(id) {
+    const [cols] = this.getDimension();
     const n = parseInt(id, 10);
-    const i = n % this.state.numCol;
-    const j = Math.floor(n / this.state.numCol);
+    const i = n % cols;
+    const j = Math.floor(n / cols);
     return ({ i, j });
+  }
+  getDimension() {
+    return this.state.sizes[this.state.activeSizeButton]
+      .split('x').map(str => parseInt(str, 10));
   }
   isAlive(id) {
     return this.state.aliveArr.indexOf(id) !== -1;
   }
   changeSize(ev) {
-    const [numCol, numRow] = ev.target.value.split('x').map(val => parseInt(val, 10));
-    this.setState({ numCol, numRow, stopSim: true });
+    this.setState({
+      stopSim: true,
+      activeSizeButton: this.state.sizes.indexOf(ev.target.value)
+    });
   }
   changeDelay(ev) {
     const delay = parseInt(ev.target.value, 10);
-    this.setState({ delay });
+    this.setState({
+      activeDelayButton: this.state.delays.indexOf(delay)
+    });
   }
   updateCellStatus() {
     const aliveArr = this.state.aliveArr;
@@ -99,10 +108,12 @@ class Board extends React.Component {
     });
   }
   cellIndexToId(cell) {
-    return ((cell.j * this.state.numCol) + cell.i).toString();
+    const [cols] = this.getDimension();
+    return ((cell.j * cols) + cell.i).toString();
   }
   render() {
-    let cells = [...new Array(this.state.numRow * this.state.numCol)]
+    const [cols, rows] = this.getDimension();
+    let cells = [...new Array(cols * rows)]
       .map((val, n) => {
         return (
           <Cell
@@ -115,18 +126,26 @@ class Board extends React.Component {
       <div className="board">
         <div className="control-top">
           <BoardAnimationControl
-            delay={this.state.delay}
+            delay={this.state.delays[this.state.activeDelayButton]}
             stopSim={this.state.stopSim}
             onStart={() => this.updateCellStatus()}
             onStop={() => this.initCellStatus()}
           />
         </div>
-        <div className={`cell-container cell-container-${this.state.numCol}x${this.state.numRow}`}>
+        <div className={`cell-container cell-container-${cols}x${rows}`}>
           { cells }
         </div>
         <div className="control-bottom">
-          <BoardSizeControl onClick={ev => this.changeSize(ev)} />
-          <BoardSpeedControl onClick={ev => this.changeDelay(ev)} />
+          <BoardSizeControl
+            sizes={this.state.sizes}
+            activeButton={this.state.activeSizeButton}
+            onClick={ev => this.changeSize(ev)}
+          />
+          <BoardSpeedControl
+            delays={this.state.delays}
+            activeButton={this.state.activeDelayButton}
+            onClick={ev => this.changeDelay(ev)}
+          />
         </div>
       </div>
     );

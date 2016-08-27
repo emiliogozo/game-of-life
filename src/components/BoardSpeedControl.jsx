@@ -1,27 +1,20 @@
 import React from 'react';
 
 function BoardSpeedControl(props) {
+  const speeds = ['slow', 'medium', 'fast'];
+  const buttons = speeds.map((speed, idx) => (
+    <button
+      id={`speed-${speed}-btn`}
+      className={idx === props.activeButton ? 'btn btn-active' : 'btn'}
+      onClick={props.onClick}
+      value={props.delays[idx]}
+      key={idx}
+    >{speed}</button>
+  ));
   return (
     <div className="control-speed">
       <span className="control-label">Sim Speed: </span>
-      <button
-        id="speed-slow-btn"
-        className="btn"
-        onClick={props.onClick}
-        value="1000"
-      >Slow</button>
-      <button
-        id="speed-medium-btn"
-        className="btn"
-        onClick={props.onClick}
-        value="500"
-      >Medium</button>
-      <button
-        id="speed-fast-btn"
-        className="btn"
-        onClick={props.onClick}
-        value="100"
-      >Fast</button>
+      { buttons }
     </div>
   );
 }

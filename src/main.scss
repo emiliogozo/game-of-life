@@ -2,6 +2,7 @@ $gray20: #333333;
 $gray14: #242424;
 $red200: #ef9a9a;
 $red500: #f44336;
+$red200a: #ff5252;
 
 @mixin cell-container($numCol: 70, $numRow: 50, $padding: 10px, $cell-size: 12px) {
     width: $cell-size * $numCol + $padding * 2;
@@ -91,6 +92,11 @@ body {
     color: white;
 	font-size: 20px;
 	border-radius: 4px;
+    cursor: pointer;
+}
+
+.btn-active {
+    background-color: $red200a;
 }
 
 .counter-label {
