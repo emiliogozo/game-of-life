@@ -11,11 +11,16 @@ class BoardAnimationControl extends React.Component {
    * Start the animation by running a setInterval instance
    */
   startAnimation() {
+    if (this.interval) clearInterval(this.interval);
     this.interval = setInterval(() => {
-      this.props.onStart();
-      this.setState({
-        generation: this.state.generation + 1
-      });
+      if (this.props.stopSim) {
+        this.clearBoard();
+      } else {
+        this.props.onStart();
+        this.setState({
+          generation: this.state.generation + 1
+        });
+      }
     }, this.props.delay);
   }
   /**

@@ -12,7 +12,8 @@ class Board extends React.Component {
       numCol: 70,
       numRow: 50,
       delay: 100,
-      aliveArr: []
+      aliveArr: [],
+      stopSim: false
     };
   }
   onCellClick(ev) {
@@ -45,7 +46,7 @@ class Board extends React.Component {
   }
   changeSize(ev) {
     const [numCol, numRow] = ev.target.value.split('x').map(val => parseInt(val, 10));
-    this.setState({ numCol, numRow });
+    this.setState({ numCol, numRow, stopSim: true });
   }
   changeDelay(ev) {
     const delay = parseInt(ev.target.value, 10);
@@ -80,7 +81,8 @@ class Board extends React.Component {
   }
   initCellStatus() {
     this.setState({
-      aliveArr: []
+      aliveArr: [],
+      stopSim: false
     });
   }
   cellIndexToId(cell) {
@@ -101,6 +103,7 @@ class Board extends React.Component {
         <div className="control-top">
           <BoardAnimationControl
             delay={this.state.delay}
+            stopSim={this.state.stopSim}
             onStart={() => this.updateCellStatus()}
             onStop={() => this.initCellStatus()}
           />
