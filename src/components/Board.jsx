@@ -1,6 +1,9 @@
 import React from 'react';
 
 import Cell from './Cell';
+import BoardAnimationControl from './BoardAnimationControl';
+import BoardSizeControl from './BoardSizeControl';
+import BoardSpeedControl from './BoardSpeedControl';
 
 class Board extends React.Component {
   constructor() {
@@ -9,7 +12,6 @@ class Board extends React.Component {
       numCol: 70,
       numRow: 50,
       delay: 100,
-      generation: 0,
       aliveArr: []
     };
   }
@@ -45,27 +47,9 @@ class Board extends React.Component {
     const [numCol, numRow] = ev.target.value.split('x').map(val => parseInt(val, 10));
     this.setState({ numCol, numRow });
   }
-  /**
-   * Clears the board and resets the counter to zero
-   * TODO: clearing the board
-   */
-  clearBoard() {
-    this.pauseAnimation();
-    this.initCellStatus();
-  }
-  /**
-   * Halts the animation by stopping the counter
-   */
-  pauseAnimation() {
-    clearInterval(this.interval);
-  }
-  /**
-   * Start the animation by running a setInterval instance
-   */
-  startAnimation() {
-    this.interval = setInterval(() => {
-      this.updateCellStatus();
-    }, this.delay);
+  changeDelay(ev) {
+    const delay = parseInt(ev.target.value, 10);
+    this.setState({ delay });
   }
   updateCellStatus() {
     const aliveArr = this.state.aliveArr;
@@ -91,13 +75,11 @@ class Board extends React.Component {
     newAliveArr = [].concat(...newAliveArr);
 
     this.setState({
-      generation: this.state.generation + 1,
       aliveArr: newAliveArr
     });
   }
   initCellStatus() {
     this.setState({
-      generation: 0,
       aliveArr: []
     });
   }
@@ -117,49 +99,22 @@ class Board extends React.Component {
     return (
       <div className="board">
         <div className="control-top">
-          <button id="run-btn" className="btn" onClick={() => this.startAnimation()}>
-          Run</button>
-          <button id="pause-btn" className="btn" onClick={() => this.pauseAnimation()}>
-          Pause</button>
-          <button id="clear-btn" className="btn" onClick={() => this.clearBoard()}>
-          Clear</button>
-          <span className="counter-label">Generation: </span>
-          <span className="counter">{this.state.generation}</span>
+          <BoardAnimationControl
+            delay={this.state.delay}
+            onStart={() => this.updateCellStatus()}
+            onStop={() => this.initCellStatus()}
+          />
         </div>
         <div className={`cell-container cell-container-${this.state.numCol}x${this.state.numRow}`}>
           { cells }
         </div>
         <div className="control-bottom">
-          <div className="control-size">
-            <span className="control-label">Board Size: </span>
-            <button
-              id="size-50x30-btn"
-              className="btn" onClick={(ev) => this.changeSize(ev)}
-              value="50x30"
-            >50x30</button>
-            <button
-              id="size-70x50-btn"
-              className="btn"
-              onClick={(ev) => this.changeSize(ev)}
-              value="70x50"
-            >70x50</button>
-            <button
-              id="size-100x80-btn"
-              className="btn"
-              onClick={(ev) => this.changeSize(ev)}
-              value="100x80"
-            >100x80</button>
-          </div>
-          <div className="control-speed">
-            <span className="control-label">Sim Speed: </span>
-            <button id="speed-slow-btn" className="btn">Slow</button>
-            <button id="speed-medium-btn" className="btn">Medium</button>
-            <button id="speed-fast-btn" className="btn">Fast</button>
-          </div>
+          <BoardSizeControl onClick={ev => this.changeSize(ev)} />
+          <BoardSpeedControl onClick={ev => this.changeDelay(ev)} />
         </div>
       </div>
     );
   }
 }
 
-module.exports = Board;
+export default Board;

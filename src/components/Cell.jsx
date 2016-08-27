@@ -55,4 +55,4 @@ class Cell extends React.Component {
   }
 }
 
-module.exports = Cell;
+export default Cell;

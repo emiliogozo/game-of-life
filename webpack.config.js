@@ -4,7 +4,6 @@ const HtmlWebpackPlugin = require('html-webpack-plugin');
 const srcPath = path.join(__dirname, 'src');
 const buildPath = path.join(__dirname, 'dist');
 
-
 const HtmlWebpackPluginConfig = new HtmlWebpackPlugin({
   template: path.join(srcPath, 'index.html'),
   filename: 'index.html',
