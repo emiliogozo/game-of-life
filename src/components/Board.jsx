@@ -24,6 +24,11 @@ class Board extends React.Component {
     } else {
       this.state.aliveArr = this.state.aliveArr.filter(id => id !== ev.target.id);
     }
+    if (this.state.stopSim) {
+      this.setState({
+        stopSim: false
+      });
+    }
   }
   getNeighbors(id) {
     const { i, j } = this.getCellIndex(id);
