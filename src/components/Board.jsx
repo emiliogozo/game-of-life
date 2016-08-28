@@ -113,7 +113,7 @@ class Board extends React.Component {
   }
   render() {
     const [cols, rows] = this.getDimension();
-    let cells = [...new Array(cols * rows)]
+    let cells = new Array(cols * rows).fill(0)
       .map((val, n) => {
         return (
           <Cell
