@@ -7,6 +7,9 @@ class BoardAnimationControl extends React.Component {
       generation: 0
     };
   }
+  componentDidMount() {
+    this.startAnimation();
+  }
   /**
    * Start the animation by running a setInterval instance
    */

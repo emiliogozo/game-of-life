@@ -19,6 +19,17 @@ class Board extends React.Component {
       stopSim: false
     };
   }
+  componentWillMount() {
+    const [cols, rows] = this.getDimension();
+    const aliveArr = new Array(cols * rows).fill(0)
+      .map((val, n) => {
+        if (Math.round(Math.random() * 100) > 80) {
+          return n.toString();
+        }
+        return undefined;
+      });
+    this.setState({ aliveArr });
+  }
   onCellClick(ev) {
     if (!this.isAlive(ev.target.id)) {
       this.state.aliveArr.push(ev.target.id);
